@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 /**
  * Entry point of app: don't change this
  */
