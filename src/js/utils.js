@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 export function calcTileType(index, boardSize) {
   // TODO: write logic here
   return 'center';
