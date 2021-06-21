@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 import Character from './Character';
 
 export default class PositionedCharacter {
