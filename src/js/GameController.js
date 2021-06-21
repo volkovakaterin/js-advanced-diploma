@@ -1,6 +1,8 @@
+/* eslint-disable linebreak-style */
+/* eslint-disable no-plusplus */
+/* eslint-disable no-shadow */
 /* eslint-disable class-methods-use-this */
 /* eslint-disable no-unused-vars */
-/* eslint-disable linebreak-style */
 
 
 import themes from './themes';
@@ -16,23 +18,39 @@ export default class GameController {
 
   init() {
     this.gamePlay.drawUi(themes.prairie);
-    const playerTeams = generateTeam(new Team().player, 1, 2);
-    const npcTeams = generateTeam(new Team().computer, 1, 2);
-    npcTeams.forEach((item) => {
-      playerTeams.push(item);
-    });
-    // playerTeams.forEach((item) => {
+    const playerTeam = generateTeam(new Team().player, 1, 2);
+    const npcTeam = generateTeam(new Team().computer, 1, 2);
+    function numberPlayer(n) {
+      const number = [];
+      for (let i = 0; i < n; i++) {
+        const a = n * i;
+        number.push(a);
+        number.push(a + 1);
+      }
+      return number;
+    }
+    function numberNpc(n) {
+      const number = [];
+      for (let i = 1; i <= n; i++) {
+        const a = n * i - 2;
+        number.push(a);
+        number.push(a + 1);
+      }
+      return number;
+    }
+    const numberP = numberPlayer(8);
+    const numberN = numberNpc(8);
+    function position(team, numberTeam) {
+      team.forEach((character) => {
+        const position = numberTeam[Math.floor(Math.random() * numberTeam.length)];
+        const positionedCharacter = new PositionedCharacter(character, position);
+        this.gamePlay.redrawPositions(positionedCharacter);
+      });
+    }
+    position(playerTeam, numberP);
+    position(npcTeam, numberN);
 
-    // new PositionedCharacter(item);
-    // });
-    const mag = new PositionedCharacter({
-      level: 1,
-      attack: 10,
-      defence: 40,
-      health: 100,
-      type: 'Magician',
-    }, 2);
-    this.gamePlay.redrawPositions(mag);
+
     // TODO: add event listeners to gamePlay events
     // TODO: load saved stated from stateService
   }
