@@ -9,6 +9,7 @@ import themes from './themes';
 import Team from './Team';
 import { generateTeam } from './generators';
 import PositionedCharacter from './PositionedCharacter';
+import GamePlay from './GamePlay';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -44,7 +45,7 @@ export default class GameController {
       team.forEach((character) => {
         const position = numberTeam[Math.floor(Math.random() * numberTeam.length)];
         const positionedCharacter = new PositionedCharacter(character, position);
-        this.gamePlay.redrawPositions(positionedCharacter);
+        GameController.gamePlay.redrawPositions(positionedCharacter);
       });
     }
     position(playerTeam, numberP);
