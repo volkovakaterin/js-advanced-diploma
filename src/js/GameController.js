@@ -43,8 +43,15 @@ export default class GameController {
     const numberN = numberNpc(8);
     function position(team, numberTeam) {
       team.forEach((character) => {
-        const position = numberTeam[Math.floor(Math.random() * numberTeam.length)];
+        let position = numberTeam[Math.floor(Math.random() * numberTeam.length)];
+        const index = team.indexOf(character);
+        for (let i = 0; i < index; i++) {
+          if (position === team[i].position) {
+            position = numberTeam[Math.floor(Math.random() * numberTeam.length)];
+          }
+        }
         const positionedCharacter = new PositionedCharacter(character, position);
+        team.splice(index, 1, positionedCharacter);
         GameController.gamePlay.redrawPositions(positionedCharacter);
       });
     }
