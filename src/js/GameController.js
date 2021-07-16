@@ -1,4 +1,5 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable no-console */
 /* eslint-disable no-plusplus */
 /* eslint-disable no-shadow */
 /* eslint-disable class-methods-use-this */
@@ -41,25 +42,30 @@ export default class GameController {
     }
     const numberP = numberPlayer(8);
     const numberN = numberNpc(8);
-    function position(team, numberTeam) {
+    const teamJoint = [];
+    const position = (team, numberTeam) => {
       team.forEach((character) => {
-        let position = numberTeam[Math.floor(Math.random() * numberTeam.length)];
+        let posit = numberTeam[Math.floor(Math.random() * numberTeam.length)];
         const index = team.indexOf(character);
         for (let i = 0; i < index; i++) {
-          if (position === team[i].position) {
-            position = numberTeam[Math.floor(Math.random() * numberTeam.length)];
+          if (posit === team[i].position) {
+            posit = numberTeam[Math.floor(Math.random() * numberTeam.length)];
           }
         }
-        const positionedCharacter = new PositionedCharacter(character, position);
+        const positionedCharacter = new PositionedCharacter(character, posit);
         team.splice(index, 1, positionedCharacter);
-        GameController.gamePlay.redrawPositions(positionedCharacter);
+        teamJoint.push(positionedCharacter);
       });
-    }
+    };
     position(playerTeam, numberP);
     position(npcTeam, numberN);
-
+    this.gamePlay.redrawPositions(teamJoint);
 
     // TODO: add event listeners to gamePlay events
+    const someMethodName = () => {
+      this.gamePlay.addCellEnterListener(this.onCellEnter);
+    };
+    someMethodName();
     // TODO: load saved stated from stateService
   }
 
@@ -69,6 +75,8 @@ export default class GameController {
 
   onCellEnter(index) {
     // TODO: react to mouse enter
+    const cells = document.getElementsByClassName('cell');
+    if (cells[index].firstChild) { this.gamePlay.showCellTooltip('привет', index); }
   }
 
   onCellLeave(index) {

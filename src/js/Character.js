@@ -25,7 +25,7 @@ export class Character {
 }
 
 export class Magician extends Character {
-  constructor(level, health, type = 'Magician', attack = 10, defence = 40) {
+  constructor(level, health, type = 'magician', attack = 10, defence = 40) {
     super(level, health);
     this.type = type;
     this.attack = attack;
@@ -33,7 +33,7 @@ export class Magician extends Character {
   }
 }
 export class Daemon extends Character {
-  constructor(level, health, type = 'Daemon', attack = 10, defence = 40) {
+  constructor(level, health, type = 'daemon', attack = 10, defence = 40) {
     super(level, health);
     this.type = type;
     this.attack = attack;
@@ -41,7 +41,7 @@ export class Daemon extends Character {
   }
 }
 export class Bowman extends Character {
-  constructor(level, health, type = 'Bowman', attack = 25, defence = 25) {
+  constructor(level, health, type = 'bowman', attack = 25, defence = 25) {
     super(level, health);
     this.type = type;
     this.attack = attack;
@@ -49,7 +49,7 @@ export class Bowman extends Character {
   }
 }
 export class Swordsman extends Character {
-  constructor(level, health, type = 'Swordsman', attack = 40, defence = 10) {
+  constructor(level, health, type = 'swordsman', attack = 40, defence = 10) {
     super(level, health);
     this.type = type;
     this.attack = attack;
@@ -57,7 +57,7 @@ export class Swordsman extends Character {
   }
 }
 export class Undead extends Character {
-  constructor(level, health, type = 'Undead', attack = 40, defence = 10) {
+  constructor(level, health, type = 'undead', attack = 40, defence = 10) {
     super(level, health);
     this.type = type;
     this.attack = attack;
@@ -65,7 +65,7 @@ export class Undead extends Character {
   }
 }
 export class Vampire extends Character {
-  constructor(level, health, type = 'Vampire', attack = 25, defence = 25) {
+  constructor(level, health, type = 'vampire', attack = 25, defence = 25) {
     super(level, health);
     this.type = type;
     this.attack = attack;

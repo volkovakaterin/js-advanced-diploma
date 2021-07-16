@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-console */
 /* eslint-disable linebreak-style */
 import { calcHealthLevel, calcTileType } from './utils';
 
@@ -70,8 +72,6 @@ export default class GamePlay {
    * @param positions array of PositionedCharacter objects
    */
   redrawPositions(positions) {
-    console.log(positions);
-    console.log('Привет');
     for (const cell of this.cells) {
       cell.innerHTML = '';
     }
@@ -80,6 +80,7 @@ export default class GamePlay {
       const cellEl = this.boardEl.children[position.position];
       const charEl = document.createElement('div');
       charEl.classList.add('character', position.character.type);
+
 
       const healthEl = document.createElement('div');
       healthEl.classList.add('health-level');
