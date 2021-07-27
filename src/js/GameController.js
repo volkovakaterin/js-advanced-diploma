@@ -101,7 +101,6 @@ export default class GameController {
       this.teamJoint.forEach((character) => {
         if (numberSelected === character.position) {
           character.position = index;
-          console.log(index);
         }
       });
       this.gamePlay.redrawPositions(this.teamJoint);
@@ -131,11 +130,10 @@ export default class GameController {
       });
       this.gamePlay.showDamage(index, damage);
       this.teamJoint[target].character.health -= damage;
-      console.log('Привет');
       this.gamePlay.redrawPositions(this.teamJoint);
       GameState.from('computer');
       this.computerMove();
-      console.log(this.teamJoint);
+      // console.log(this.teamJoint);
     }
   }
 
@@ -196,6 +194,8 @@ export default class GameController {
   }
 
   computerMove() {
+    const validCellsAttack = [];
+    let cellAttack;
     const characters = [this.teamJoint[2], this.teamJoint[3]];
     const character = characters[Math.floor(Math.random() * characters.length)];
     if (character.character.type === 'daemon') {
@@ -207,31 +207,36 @@ export default class GameController {
     } console.log(this.validCells);
     this.validCells.forEach((index) => {
       if (this.cells[index].firstChild != null && (this.cells[index].firstChild.classList.contains('swordsman') || this.cells[index].firstChild.classList.contains('bowman') || this.cells[index].firstChild.classList.contains('magician'))) {
-        console.log(this.validCellsAttack);
-        this.validCellsAttack.push(index);
+        // console.log(validCellsAttack);
+        validCellsAttack.push(index);
+        // console.log(validCellsAttack);
       }
-    }); if (this.validCellsAttack.length > 0) {
-      const cellAttack = this.validСellsAttack[Math.floor(Math.random() * this.validСellsAttack.length)];
-      return cellAttack;
+    }); if (validCellsAttack.length > 0) {
+      cellAttack = validCellsAttack[Math.floor(Math.random() * validCellsAttack.length)];
+      // console.log(cellAttack);
+      let targetDefence;
+      let attackerAttack;
+      let target;
+      this.teamJoint.forEach((ch) => {
+        if (cellAttack === ch.position) {
+          target = this.teamJoint.indexOf(ch);
+          // console.log(target);
+          targetDefence = ch.character.defence;
+        }
+      });
+      this.teamJoint.forEach((ch) => {
+        if (character.position === ch.position) {
+          attackerAttack = ch.character.attack;
+        }
+      });
+      const damage = Math.max(attackerAttack - targetDefence, attackerAttack * 0.1);
+      this.gamePlay.showDamage(cellAttack, damage);
+      // console.log(this.teamJoint[target]);
+      // console.log(this.teamJoint[target].character);
+      // console.log(this.teamJoint[target].character.health);
+      this.teamJoint[target].character.health -= damage;
+      // console.log('Привет');
+      this.gamePlay.redrawPositions(this.teamJoint);
     }
-    // let targetDefence;
-    // let attackerAttack;
-    // let target;
-    // team.forEach((ch) => {
-    //   if (cellAttack === ch.position) {
-    //     target = team.indexOf(ch);
-    //     targetDefence = ch.character.defence;
-    //   }
-    // });
-    // team.forEach((ch) => {
-    //   if (character.position === ch.position) {
-    //     attackerAttack = ch.character.attack;
-    //   }
-    // });
-    // const damage = Math.max(attackerAttack - targetDefence, attackerAttack * 0.1);
-    // GamePlay.showDamage(cellAttack, damage);
-    // team[target].character.health -= damage;
-    // console.log('Привет');
-    // GamePlay.redrawPositions(team);
   }
 }
