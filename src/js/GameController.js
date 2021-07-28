@@ -24,13 +24,7 @@ export default class GameController {
     this.cells = document.getElementsByClassName('cell');
     this.validCellsAttack = [];
     this.validCells = [];
-  }
-
-  init() {
-    this.gamePlay.drawUi(themes.prairie);
-    const playerTeam = generateTeam(new Team().player, 1, 2);
-    const npcTeam = generateTeam(new Team().computer, 1, 2);
-    function numberPlayer(n) {
+    this.numberPlayer = (n) => {
       const number = [];
       for (let i = 0; i < n; i++) {
         const a = n * i;
@@ -38,8 +32,8 @@ export default class GameController {
         number.push(a + 1);
       }
       return number;
-    }
-    function numberNpc(n) {
+    };
+    this.numberNpc = (n) => {
       const number = [];
       for (let i = 1; i <= n; i++) {
         const a = n * i - 2;
@@ -47,10 +41,8 @@ export default class GameController {
         number.push(a + 1);
       }
       return number;
-    }
-    const numberP = numberPlayer(8);
-    const numberN = numberNpc(8);
-    const position = (team, numberTeam) => {
+    };
+    this.position = (team, numberTeam) => {
       team.forEach((character) => {
         let posit = numberTeam[Math.floor(Math.random() * numberTeam.length)];
         const index = team.indexOf(character);
@@ -64,8 +56,48 @@ export default class GameController {
         this.teamJoint.push(positionedCharacter);
       });
     };
-    position(playerTeam, numberP);
-    position(npcTeam, numberN);
+    this.newLevel = () => {
+      if (this.teamJoint.length < 3) {
+        console.log('короткий массив');
+        const array = [];
+        console.log(this.teamJoint);
+        this.teamJoint.forEach((character) => {
+          array.push(character.character.type);
+        }); if ((array.includes('magician') === false && array.includes('bowman') === false && array.includes('swordsman') === false) || (array.includes('undead') === false && array.includes('vampire') === false && array.includes('daemon') === false)) {
+          console.log('новый уровень');
+          this.gamePlay.drawUi(themes.desert);
+          this.teamJoint.forEach((character) => {
+            character.character.levelUp();
+          });
+          console.log(this.teamJoint);
+          const playerTeam = generateTeam(new Team().player, 1, 1);
+          console.log(this.teamJoint);
+          const numberP = this.numberPlayer(8);
+          const numberN = this.numberNpc(8);
+          this.position(playerTeam, numberP);
+          let countCharacter = 0;
+          console.log(this.teamJoint);
+          this.teamJoint.forEach((character) => {
+            if (character.character.type === 'magician' || character.character.type === 'bowman' || character.character.type === 'swordsman') {
+              countCharacter += 1;
+            }
+          });
+          const npcTeam = generateTeam(new Team().computer, 2, countCharacter);
+          this.position(npcTeam, numberN);
+          this.gamePlay.redrawPositions(this.teamJoint);
+        }
+      }
+    };
+  }
+
+  init() {
+    this.gamePlay.drawUi(themes.prairie);
+    const playerTeam = generateTeam(new Team().player, 1, 2);
+    const npcTeam = generateTeam(new Team().computer, 1, 2);
+    const numberP = this.numberPlayer(8);
+    const numberN = this.numberNpc(8);
+    this.position(playerTeam, numberP);
+    this.position(npcTeam, numberN);
     this.gamePlay.redrawPositions(this.teamJoint);
 
     // TODO: add event listeners to gamePlay events
@@ -107,6 +139,7 @@ export default class GameController {
       this.cells.forEach((cell) => {
         cell.classList.remove('selected', 'selected-green', 'selected-yellow');
       });
+      this.computerMove();
       GameState.from('computer');
     }
     if (this.cells[index].classList.contains('selected-red')) {
@@ -128,11 +161,20 @@ export default class GameController {
       this.cells.forEach((cell) => {
         cell.classList.remove('selected', 'selected-red', 'selected-yellow');
       });
-      this.gamePlay.showDamage(index, damage);
+      const promise = this.gamePlay.showDamage(index, damage);
+
       this.teamJoint[target].character.health -= damage;
-      this.gamePlay.redrawPositions(this.teamJoint);
-      GameState.from('computer');
-      this.computerMove();
+      if (this.teamJoint[target].character.health <= 0) {
+        this.teamJoint.splice(target, 1);
+      }
+
+      promise.then((result) => this.gamePlay.redrawPositions(this.teamJoint));
+      promise.then((result) => this.newLevel());
+      // GameState.from('computer');
+      promise.then((result) => this.computerMove());
+
+
+      // console.log('kfrfm');
       // console.log(this.teamJoint);
     }
   }
@@ -196,7 +238,12 @@ export default class GameController {
   computerMove() {
     const validCellsAttack = [];
     let cellAttack;
-    const characters = [this.teamJoint[2], this.teamJoint[3]];
+    const characters = [];
+    this.teamJoint.forEach((ch) => {
+      if (ch.character.type === 'daemon' || ch.character.type === 'vampire' || ch.character.type === 'undead') {
+        characters.push(ch);
+      }
+    });
     const character = characters[Math.floor(Math.random() * characters.length)];
     if (character.character.type === 'daemon') {
       this.validCells = validFourCell(character.position);
@@ -230,12 +277,38 @@ export default class GameController {
         }
       });
       const damage = Math.max(attackerAttack - targetDefence, attackerAttack * 0.1);
-      this.gamePlay.showDamage(cellAttack, damage);
+      const promise = this.gamePlay.showDamage(cellAttack, damage);
       // console.log(this.teamJoint[target]);
       // console.log(this.teamJoint[target].character);
       // console.log(this.teamJoint[target].character.health);
       this.teamJoint[target].character.health -= damage;
+      if (this.teamJoint[target].character.health <= 0) {
+        this.teamJoint.splice(target, 1);
+      }
+      promise.then((resul) => this.gamePlay.redrawPositions(this.teamJoint));
+      promise.then((result) => this.newLevel());
       // console.log('Привет');
+      // this.gamePlay.redrawPositions(this.teamJoint);
+    } else {
+      console.log('обычный ход');
+      if (character.character.type === 'daemon') {
+        this.validCells = validOneCell(character.position);
+      } if (character.character.type === 'vampire') {
+        this.validCells = validTwoCell(character.position);
+      } if (character.character.type === 'undead') {
+        this.validCells = validFourCell(character.position);
+      } this.validCells.forEach((n) => {
+        if (this.cells[n].firstChild != null) {
+          this.validCells.splice(this.validCells.indexOf(n), 1);
+        }
+      });
+      const cellMove = this.validCells[Math.floor(Math.random() * this.validCells.length)];
+      console.log(cellMove);
+      this.teamJoint.forEach((ch) => {
+        if (character === ch) {
+          ch.position = cellMove;
+        }
+      });
       this.gamePlay.redrawPositions(this.teamJoint);
     }
   }
