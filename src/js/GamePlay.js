@@ -1,6 +1,7 @@
+/* eslint-disable linebreak-style */
+/* eslint-disable no-alert */
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
-/* eslint-disable linebreak-style */
 import { calcHealthLevel, calcTileType } from './utils';
 
 export default class GamePlay {

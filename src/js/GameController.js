@@ -24,6 +24,7 @@ export default class GameController {
     this.cells = document.getElementsByClassName('cell');
     this.validCellsAttack = [];
     this.validCells = [];
+    this.objectState = {};
     this.numberPlayer = (n) => {
       const number = [];
       for (let i = 0; i < n; i++) {
@@ -57,32 +58,52 @@ export default class GameController {
       });
     };
     this.newLevel = () => {
-      if (this.teamJoint.length < 3) {
-        console.log('короткий массив');
-        const array = [];
-        console.log(this.teamJoint);
+      const array = [];
+      console.log(this.teamJoint);
+      this.teamJoint.forEach((character) => {
+        array.push(character.character.type);
+      });
+      if ((array.includes('magician') === false && array.includes('bowman') === false && array.includes('swordsman') === false) || (array.includes('undead') === false && array.includes('vampire') === false && array.includes('daemon') === false)) {
+        console.log('новый уровень');
         this.teamJoint.forEach((character) => {
-          array.push(character.character.type);
-        }); if ((array.includes('magician') === false && array.includes('bowman') === false && array.includes('swordsman') === false) || (array.includes('undead') === false && array.includes('vampire') === false && array.includes('daemon') === false)) {
-          console.log('новый уровень');
-          this.gamePlay.drawUi(themes.desert);
+          if (character.character.type === 'magician' || character.character.type === 'bowman' || character.character.type === 'swordsman') {
+            this.objectState.countPoints += character.character.health;
+          }
+        });
+        if (this.objectState.level === 4) {
+          this.cells.forEach((event) => {
+            event.removeEventListener('click', this.onCellClick);
+          });
+          GameState.from(this.objectState);
+        } else {
+          this.gamePlay.drawUi(Object.getOwnPropertyNames(themes[this.objectState.level])[0]);
+          this.objectState.level += 1;
           this.teamJoint.forEach((character) => {
             character.character.levelUp();
           });
-          console.log(this.teamJoint);
-          const playerTeam = generateTeam(new Team().player, 1, 1);
-          console.log(this.teamJoint);
+          let maxLevelPlayer;
+          let countCharacterPlayer;
+          if (this.objectState.level === 2) {
+            maxLevelPlayer = 1;
+            countCharacterPlayer = 1;
+          } else if (this.objectState.level === 3) {
+            maxLevelPlayer = 2;
+            countCharacterPlayer = 2;
+          } else if (this.objectState.level === 4) {
+            maxLevelPlayer = 3;
+            countCharacterPlayer = 2;
+          }
+          const playerTeam = generateTeam(new Team().player, maxLevelPlayer, countCharacterPlayer);
           const numberP = this.numberPlayer(8);
           const numberN = this.numberNpc(8);
           this.position(playerTeam, numberP);
           let countCharacter = 0;
-          console.log(this.teamJoint);
           this.teamJoint.forEach((character) => {
             if (character.character.type === 'magician' || character.character.type === 'bowman' || character.character.type === 'swordsman') {
               countCharacter += 1;
             }
           });
-          const npcTeam = generateTeam(new Team().computer, 2, countCharacter);
+          const npcTeam = generateTeam(new Team().computer, this.objectState.level, countCharacter);
           this.position(npcTeam, numberN);
           this.gamePlay.redrawPositions(this.teamJoint);
         }
@@ -91,13 +112,20 @@ export default class GameController {
   }
 
   init() {
-    this.gamePlay.drawUi(themes.prairie);
+    this.gamePlay.drawUi(Object.keys(themes[0])[0]);
     const playerTeam = generateTeam(new Team().player, 1, 2);
     const npcTeam = generateTeam(new Team().computer, 1, 2);
     const numberP = this.numberPlayer(8);
     const numberN = this.numberNpc(8);
     this.position(playerTeam, numberP);
     this.position(npcTeam, numberN);
+    this.objectState = {
+      move: 'player',
+      characters: this.teamJoint,
+      level: 1,
+      countPoints: 0,
+    };
+    // GameState.from(objectState);
     this.gamePlay.redrawPositions(this.teamJoint);
 
     // TODO: add event listeners to gamePlay events
@@ -113,7 +141,18 @@ export default class GameController {
       this.gamePlay.addCellClickListener(this.onCellClick.bind(this));
     };
     clickListener();
-
+    const newGame = () => {
+      this.gamePlay.addNewGameListener(this.newGame.bind(this));
+    };
+    newGame();
+    const saveGame = () => {
+      this.gamePlay.addSaveGameListener(this.saveGame.bind(this));
+    };
+    saveGame();
+    const loadGame = () => {
+      this.gamePlay.addLoadGameListener(this.loadGame.bind(this));
+    };
+    loadGame();
     // TODO: load saved stated from stateService
   }
 
@@ -130,6 +169,7 @@ export default class GameController {
       this.gamePlay.constructor.showError('Невозможно выбрать персонажа');
     }
     if (this.cells[index].classList.contains('selected-green')) {
+      console.log('простой ход игорока');
       this.teamJoint.forEach((character) => {
         if (numberSelected === character.position) {
           character.position = index;
@@ -139,10 +179,11 @@ export default class GameController {
       this.cells.forEach((cell) => {
         cell.classList.remove('selected', 'selected-green', 'selected-yellow');
       });
+      this.objectState.move = 'computer';
       this.computerMove();
-      GameState.from('computer');
     }
     if (this.cells[index].classList.contains('selected-red')) {
+      console.log('атака игрока');
       let targetDefence;
       let attackerAttack;
       let target;
@@ -167,15 +208,13 @@ export default class GameController {
       if (this.teamJoint[target].character.health <= 0) {
         this.teamJoint.splice(target, 1);
       }
-
       promise.then((result) => this.gamePlay.redrawPositions(this.teamJoint));
+      this.objectState.move = 'computer';
+      console.log(this.teamJoint);
+
       promise.then((result) => this.newLevel());
-      // GameState.from('computer');
+      console.log(this.teamJoint);
       promise.then((result) => this.computerMove());
-
-
-      // console.log('kfrfm');
-      // console.log(this.teamJoint);
     }
   }
 
@@ -251,23 +290,20 @@ export default class GameController {
       this.validCells = validTwoCell(character.position);
     } if (character.character.type === 'undead') {
       this.validCells = validOneCell(character.position);
-    } console.log(this.validCells);
+    }
     this.validCells.forEach((index) => {
       if (this.cells[index].firstChild != null && (this.cells[index].firstChild.classList.contains('swordsman') || this.cells[index].firstChild.classList.contains('bowman') || this.cells[index].firstChild.classList.contains('magician'))) {
-        // console.log(validCellsAttack);
         validCellsAttack.push(index);
-        // console.log(validCellsAttack);
       }
     }); if (validCellsAttack.length > 0) {
       cellAttack = validCellsAttack[Math.floor(Math.random() * validCellsAttack.length)];
-      // console.log(cellAttack);
+      console.log('атака компа');
       let targetDefence;
       let attackerAttack;
       let target;
       this.teamJoint.forEach((ch) => {
         if (cellAttack === ch.position) {
           target = this.teamJoint.indexOf(ch);
-          // console.log(target);
           targetDefence = ch.character.defence;
         }
       });
@@ -278,19 +314,15 @@ export default class GameController {
       });
       const damage = Math.max(attackerAttack - targetDefence, attackerAttack * 0.1);
       const promise = this.gamePlay.showDamage(cellAttack, damage);
-      // console.log(this.teamJoint[target]);
-      // console.log(this.teamJoint[target].character);
-      // console.log(this.teamJoint[target].character.health);
       this.teamJoint[target].character.health -= damage;
       if (this.teamJoint[target].character.health <= 0) {
         this.teamJoint.splice(target, 1);
       }
       promise.then((resul) => this.gamePlay.redrawPositions(this.teamJoint));
+      this.objectState.move = 'player';
       promise.then((result) => this.newLevel());
-      // console.log('Привет');
-      // this.gamePlay.redrawPositions(this.teamJoint);
     } else {
-      console.log('обычный ход');
+      console.log('обычный ход компа');
       if (character.character.type === 'daemon') {
         this.validCells = validOneCell(character.position);
       } if (character.character.type === 'vampire') {
@@ -303,13 +335,21 @@ export default class GameController {
         }
       });
       const cellMove = this.validCells[Math.floor(Math.random() * this.validCells.length)];
-      console.log(cellMove);
       this.teamJoint.forEach((ch) => {
         if (character === ch) {
           ch.position = cellMove;
         }
       });
       this.gamePlay.redrawPositions(this.teamJoint);
+      this.objectState.move = 'player';
     }
   }
+
+  newGame() {
+    this.init();
+  }
+
+  saveGame() { console.log('сохранение'); }
+
+  loadGame() { console.log('загрузка'); }
 }
