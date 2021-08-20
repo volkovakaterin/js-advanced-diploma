@@ -25,6 +25,8 @@ export default class GameController {
     this.validCellsAttack = [];
     this.validCells = [];
     this.objectState = {};
+    this.npcTeam = [];
+    this.playerTeam = [];
     this.numberPlayer = (n) => {
       const number = [];
       for (let i = 0; i < n; i++) {
@@ -93,18 +95,18 @@ export default class GameController {
             maxLevelPlayer = 3;
             countCharacterPlayer = 2;
           }
-          const playerTeam = generateTeam(new Team().player, maxLevelPlayer, countCharacterPlayer);
+          this.playerTeam = generateTeam(new Team().player, maxLevelPlayer, countCharacterPlayer);
           const numberP = this.numberPlayer(8);
           const numberN = this.numberNpc(8);
-          this.position(playerTeam, numberP);
+          this.position(this.playerTeam, numberP);
           let countCharacter = 0;
           this.teamJoint.forEach((character) => {
             if (character.character.type === 'magician' || character.character.type === 'bowman' || character.character.type === 'swordsman') {
               countCharacter += 1;
             }
           });
-          const npcTeam = generateTeam(new Team().computer, this.objectState.level, countCharacter);
-          this.position(npcTeam, numberN);
+          this.npcTeam = generateTeam(new Team().computer, this.objectState.level, countCharacter);
+          this.position(this.npcTeam, numberN);
           this.gamePlay.redrawPositions(this.teamJoint);
         }
       }
@@ -113,12 +115,12 @@ export default class GameController {
 
   init() {
     this.gamePlay.drawUi(Object.keys(themes[0])[0]);
-    const playerTeam = generateTeam(new Team().player, 1, 2);
-    const npcTeam = generateTeam(new Team().computer, 1, 2);
+    this.playerTeam = generateTeam(new Team().player, 1, 2);
+    this.npcTeam = generateTeam(new Team().computer, 1, 2);
     const numberP = this.numberPlayer(8);
     const numberN = this.numberNpc(8);
-    this.position(playerTeam, numberP);
-    this.position(npcTeam, numberN);
+    this.position(this.playerTeam, numberP);
+    this.position(this.npcTeam, numberN);
     this.objectState = {
       move: 'player',
       characters: this.teamJoint,
@@ -257,8 +259,10 @@ export default class GameController {
         } if (this.validCells.includes(index)) {
           this.cells[index].classList.add('selected', 'selected-red');
           this.gamePlay.setCursor(cursors.crosshair);
-        }
+        } else { this.gamePlay.setCursor(cursors.notallowed); }
       }
+    } else if (this.cells[index].firstChild && (this.cells[index].firstChild.classList.contains('swordsman') || this.cells[index].firstChild.classList.contains('bowman') || this.cells[index].firstChild.classList.contains('magician'))) {
+      this.gamePlay.setCursor(cursors.pointer);
     }
   }
 
@@ -346,10 +350,22 @@ export default class GameController {
   }
 
   newGame() {
+    this.teamJoint = [];
     this.init();
+    console.log(this.teamJoint);
   }
 
-  saveGame() { console.log('сохранение'); }
+  saveGame(state) {
+    const gameState = GameState.from(this.objectState);
+    this.stateService.save(gameState);
+    console.log('сохранение');
+  }
 
-  loadGame() { console.log('загрузка'); }
+  loadGame() {
+    const loadState = this.stateService.load();
+    this.gamePlay.redrawPositions(loadState.characters);
+    this.objectState = loadState;
+    this.teamJoint = loadState.characters;
+    console.log('загрузка');
+  }
 }

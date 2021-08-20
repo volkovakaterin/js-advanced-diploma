@@ -1,4 +1,5 @@
 /* eslint-disable linebreak-style */
+/* eslint-disable new-cap */
 /* eslint-disable no-plusplus */
 /* eslint-disable max-len */
 /**
@@ -11,7 +12,8 @@
 
 export function* characterGenerator(allowedTypes, maxLevel) {
   // TODO: write logic here
-  const item = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+  let item = allowedTypes[Math.floor(Math.random() * allowedTypes.length)];
+  item = new item();
   const randLevel = Math.floor(1 + Math.random() * maxLevel);
   item.level = randLevel;
   yield item;

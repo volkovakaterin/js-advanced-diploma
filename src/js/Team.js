@@ -5,7 +5,7 @@ import {
 
 export default class Team {
   constructor() {
-    this.player = [new Magician(), new Bowman(), new Swordsman()];
-    this.computer = [new Daemon(), new Undead(), new Vampire()];
+    this.player = [Magician, Bowman, Swordsman];
+    this.computer = [Daemon, Undead, Vampire];
   }
 }

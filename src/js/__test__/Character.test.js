@@ -1,6 +1,6 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-new */
-import Character from '../Character';
+import { Character } from '../Character';
 
 test('Character', () => {
   class B extends Character {}

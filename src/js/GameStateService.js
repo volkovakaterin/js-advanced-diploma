@@ -6,6 +6,7 @@ export default class GameStateService {
 
   save(state) {
     this.storage.setItem('state', JSON.stringify(state));
+    console.log(state);
   }
 
   load() {
