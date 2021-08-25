@@ -366,8 +366,11 @@ export default class GameController {
     if (loadState === new Error('Invalid state')) {
       this.gamePlay.constructor.showError('Invalid state');
     } else {
-      this.gamePlay.redrawPositions(loadState.characters);
       this.objectState = loadState;
+      console.log(loadState);
+      console.log(this.objectState);
+      this.gamePlay.drawUi(Object.getOwnPropertyNames(themes[this.objectState.level - 1])[0]);
+      this.gamePlay.redrawPositions(loadState.characters);
       this.teamJoint = loadState.characters;
       console.log('загрузка');
     }
