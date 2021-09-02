@@ -15,6 +15,9 @@ import PositionedCharacter from './PositionedCharacter';
 import cursors from './cursors';
 import GameState from './GameState';
 import { validOneCell, validTwoCell, validFourCell } from './ValidCells';
+import {
+  Bowman, Daemon, Magician, Swordsman, Undead, Vampire,
+} from './Character';
 
 export default class GameController {
   constructor(gamePlay, stateService) {
@@ -366,12 +369,20 @@ export default class GameController {
     if (loadState === new Error('Invalid state')) {
       this.gamePlay.constructor.showError('Invalid state');
     } else {
+      const team = loadState.characters;
+      const teamNew = [];
+      team.forEach((ch) => {
+        const { health } = ch;
+        if (ch.type === 'bowman') { ch = new Bowman(ch.level); } else if (ch.type === 'magician') { ch = new Magician(ch.level); } else if (ch.type === 'swordsman') { ch = new Swordsman(ch.level); } else if (ch.type === 'undead') { ch = new Undead(ch.level); } else if (ch.type === 'vampire') { ch = new Vampire(ch.level); } else if (ch.type === 'daemon') { ch = new Daemon(ch.level); }
+        ch.health = health;
+        teamNew.push(ch);
+      });
+      loadState.characters = teamNew;
       this.objectState = loadState;
-      console.log(loadState);
       console.log(this.objectState);
       this.gamePlay.drawUi(Object.getOwnPropertyNames(themes[this.objectState.level - 1])[0]);
-      this.gamePlay.redrawPositions(loadState.characters);
-      this.teamJoint = loadState.characters;
+      this.gamePlay.redrawPositions(teamNew);
+      this.teamJoint = teamNew;
       console.log('загрузка');
     }
   }
