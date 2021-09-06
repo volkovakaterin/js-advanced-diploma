@@ -4,7 +4,6 @@
 export default class GameState {
   static from(object) {
     const objectState = object;
-    console.log(objectState);
     return objectState;
   }
 }

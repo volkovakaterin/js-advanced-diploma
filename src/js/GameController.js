@@ -129,7 +129,8 @@ export default class GameController {
       level: 1,
       countPoints: 0,
     };
-    // GameState.from(objectState);
+    GameState.from(this.objectState);
+    console.log(this.teamJoint);
     this.gamePlay.redrawPositions(this.teamJoint);
 
     // TODO: add event listeners to gamePlay events
@@ -357,7 +358,7 @@ export default class GameController {
     console.log(this.teamJoint);
   }
 
-  saveGame(state) {
+  saveGame() {
     const gameState = GameState.from(this.objectState);
     this.stateService.save(gameState);
     console.log('сохранение');
@@ -371,14 +372,14 @@ export default class GameController {
       const team = loadState.characters;
       const teamNew = [];
       team.forEach((ch) => {
-        const { health } = ch;
-        if (ch.type === 'bowman') { ch = new Bowman(ch.level); } else if (ch.type === 'magician') { ch = new Magician(ch.level); } else if (ch.type === 'swordsman') { ch = new Swordsman(ch.level); } else if (ch.type === 'undead') { ch = new Undead(ch.level); } else if (ch.type === 'vampire') { ch = new Vampire(ch.level); } else if (ch.type === 'daemon') { ch = new Daemon(ch.level); }
-        ch.health = health;
-        teamNew.push(ch);
+        let character = {};
+        if (ch.character.type === 'bowman') { character = new Bowman(ch.character.level); } else if (ch.character.type === 'magician') { character = new Magician(ch.character.level); console.log('создаем мага'); } else if (ch.character.type === 'swordsman') { character = new Swordsman(ch.character.level); } else if (ch.character.type === 'undead') { character = new Undead(ch.character.level); } else if (ch.character.type === 'vampire') { character = new Vampire(ch.character.level); console.log('создаем вампира'); } else if (ch.character.type === 'daemon') { character = new Daemon(ch.character.level); }
+        character.health = ch.character.health;
+        const positionedCharacter = new PositionedCharacter(character, ch.position);
+        teamNew.push(positionedCharacter);
       });
       loadState.characters = teamNew;
       this.objectState = loadState;
-      console.log(this.objectState);
       this.gamePlay.drawUi(Object.getOwnPropertyNames(themes[this.objectState.level - 1])[0]);
       this.gamePlay.redrawPositions(teamNew);
       this.teamJoint = teamNew;
