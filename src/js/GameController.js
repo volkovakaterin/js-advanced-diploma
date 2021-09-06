@@ -379,6 +379,7 @@ export default class GameController {
         teamNew.push(positionedCharacter);
       });
       loadState.characters = teamNew;
+      console.log(teamNew);
       this.objectState = loadState;
       this.gamePlay.drawUi(Object.getOwnPropertyNames(themes[this.objectState.level - 1])[0]);
       this.gamePlay.redrawPositions(teamNew);
