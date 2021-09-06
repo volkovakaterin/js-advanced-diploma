@@ -5,11 +5,10 @@ import GameController from '../GameController';
 import GameStateService from '../GameStateService';
 import { Bowman, Undead } from '../Character';
 
-
 describe('cursors', () => {
   const bowmanOne = new PositionedCharacter(new Bowman(1), 27);
   const bowmanTwo = new PositionedCharacter(new Bowman(1), 60);
-  const undeadOne = new PositionedCharacter(new Undead(1), 0);
+  const undeadOne = new PositionedCharacter(new Undead(1), 38);
   const undeadTwo = new PositionedCharacter(new Undead(1), 9);
   const teamJoint = [undeadOne, undeadTwo, bowmanOne, bowmanTwo];
   document.body.innerHTML = '<div id="game-container"></div>';
@@ -49,7 +48,7 @@ describe('cursors', () => {
 
   test('not-allowed on not allowed cell', () => {
     gameCtrl.onCellClick(27);
-    gameCtrl.onCellEnter(0);
+    gameCtrl.onCellEnter(38);
     expect(gamePlay.boardEl.style.cursor).toBe('not-allowed');
   });
 });

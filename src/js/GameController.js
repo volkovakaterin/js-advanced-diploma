@@ -7,7 +7,6 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable no-unused-vars */
 
-
 import themes from './themes';
 import Team from './Team';
 import { generateTeam } from './generators';
