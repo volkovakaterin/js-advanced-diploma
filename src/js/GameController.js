@@ -47,14 +47,16 @@ export default class GameController {
       }
       return number;
     };
-    this.position = (team, numberTeam) => {
+    this.position = (team, numberTeam, level) => {
+      console.log(team);
+      console.log(this.objectState.cellsPlayer);
       team.forEach((character) => {
         let posit = numberTeam[Math.floor(Math.random() * numberTeam.length)];
         const index = team.indexOf(character);
         for (let i = 0; i < index; i++) {
           if (posit === team[i].position) {
             posit = numberTeam[Math.floor(Math.random() * numberTeam.length)];
-          }
+          } if (level > 1 && (this.objectState.cellsPlayer.includes(posit) || this.objectState.cellsNpc.includes(posit))) { posit = numberTeam[Math.floor(Math.random() * numberTeam.length)]; }
         }
         const positionedCharacter = new PositionedCharacter(character, posit);
         team.splice(index, 1, positionedCharacter);
@@ -100,7 +102,7 @@ export default class GameController {
           this.playerTeam = generateTeam(new Team().player, maxLevelPlayer, countCharacterPlayer);
           const numberP = this.numberPlayer(8);
           const numberN = this.numberNpc(8);
-          this.position(this.playerTeam, numberP);
+          this.position(this.playerTeam, numberP, this.objectState.level);
           let countCharacter = 0;
           this.teamJoint.forEach((character) => {
             if (character.character.type === 'magician' || character.character.type === 'bowman' || character.character.type === 'swordsman') {
@@ -108,7 +110,7 @@ export default class GameController {
             }
           });
           this.npcTeam = generateTeam(new Team().computer, this.objectState.level, countCharacter);
-          this.position(this.npcTeam, numberN);
+          this.position(this.npcTeam, numberN, this.objectState.level);
           this.gamePlay.redrawPositions(this.teamJoint);
         }
       }
@@ -121,16 +123,27 @@ export default class GameController {
     this.npcTeam = generateTeam(new Team().computer, 1, 2);
     const numberP = this.numberPlayer(8);
     const numberN = this.numberNpc(8);
-    this.position(this.playerTeam, numberP);
-    this.position(this.npcTeam, numberN);
+    this.position(this.playerTeam, numberP, this.objectState.level);
+    this.position(this.npcTeam, numberN, this.objectState.level);
     this.objectState = {
       move: 'player',
       characters: this.teamJoint,
       level: 1,
       countPoints: 0,
+      selectCell: false,
+      selectType: false,
+      cellsPlayer: [],
+      cellsNpc: [],
     };
     GameState.from(this.objectState);
     console.log(this.teamJoint);
+    const cellsPlayer = [];
+    const cellsNpc = [];
+    this.teamJoint.forEach((character) => {
+      if (character.character.type === 'swordsman' || character.character.type === 'bowman' || character.character.type === 'magician') { cellsPlayer.push(character.position); } else if (character.character.type === 'daemon' || character.character.type === 'undead' || character.character.type === 'vampire') { cellsNpc.push(character.position); }
+    });
+    this.objectState.cellsPlayer = cellsPlayer;
+    this.objectState.cellsNpc = cellsNpc;
     this.gamePlay.redrawPositions(this.teamJoint);
 
     // TODO: add event listeners to gamePlay events
@@ -163,12 +176,16 @@ export default class GameController {
 
   onCellClick(index) {
     // TODO: react to click
-    const array = Array.prototype.slice.call(this.cells);
-    const numberSelected = array.indexOf(document.querySelector('.selected-yellow'));
+    const array = Array.prototype.slice.call(this.cells); // массив ввсех ячеек
+    const numberSelected = array.indexOf(document.querySelector('.selected-yellow')); // ячейка с выбранным персонажем
     if (this.cells[index].firstChild && (this.cells[index].firstChild.classList.contains('swordsman') || this.cells[index].firstChild.classList.contains('bowman') || this.cells[index].firstChild.classList.contains('magician'))) {
       if (numberSelected > -1) {
         this.gamePlay.deselectCell(numberSelected);
       } this.gamePlay.selectCell(index);
+      this.objectState.selectCell = index;
+      this.teamJoint.forEach((character) => {
+        if (index === character.position) { this.objectState.selectType = character.character.type; }
+      });
     } else if (document.querySelector('.selected') === null && this.cells[index].firstChild && (this.cells[index].firstChild.classList.contains('daemon') || this.cells[index].firstChild.classList.contains('undead') || this.cells[index].firstChild.classList.contains('vampire'))) {
       this.gamePlay.setCursor(cursors.notallowed);
       this.gamePlay.constructor.showError('Невозможно выбрать персонажа');
@@ -184,10 +201,11 @@ export default class GameController {
       this.cells.forEach((cell) => {
         cell.classList.remove('selected', 'selected-green', 'selected-yellow');
       });
+      this.objectState.selectCell = false;
       this.objectState.move = 'computer';
       this.computerMove();
     }
-    if (this.cells[index].classList.contains('selected-red')) {
+    if (this.cells[index].classList.contains('selected-red') && this.cells[index].firstChild && (this.cells[index].firstChild.classList.contains('daemon') || this.cells[index].firstChild.classList.contains('undead') || this.cells[index].firstChild.classList.contains('vampire'))) {
       console.log('атака игрока');
       let targetDefence;
       let attackerAttack;
@@ -207,6 +225,7 @@ export default class GameController {
       this.cells.forEach((cell) => {
         cell.classList.remove('selected', 'selected-red', 'selected-yellow');
       });
+      this.objectState.selectCell = false;
       const promise = this.gamePlay.showDamage(index, damage);
 
       this.teamJoint[target].character.health -= damage;
@@ -215,19 +234,24 @@ export default class GameController {
       }
       promise.then((result) => this.gamePlay.redrawPositions(this.teamJoint));
       this.objectState.move = 'computer';
-      console.log(this.teamJoint);
 
       promise.then((result) => this.newLevel());
-      console.log(this.teamJoint);
       promise.then((result) => this.computerMove());
     }
+    const cellsPlayer = [];
+    const cellsNpc = [];
+    this.teamJoint.forEach((character) => {
+      if (character.character.type === 'swordsman' || character.character.type === 'bowman' || character.character.type === 'magician') { cellsPlayer.push(character.position); } else if (character.character.type === 'daemon' || character.character.type === 'undead' || character.character.type === 'vampire') { cellsNpc.push(character.position); }
+    });
+    this.objectState.cellsPlayer = cellsPlayer;
+    this.objectState.cellsNpc = cellsNpc;
   }
 
   onCellEnter(index) {
     // TODO: react to mouse enter
     let currentChar;
     let message;
-    if (this.cells[index].firstChild) {
+    if (this.objectState.cellsPlayer.includes(index) === true || this.objectState.cellsNpc.includes(index) === true) {
       this.teamJoint.forEach((character) => {
         if (index === character.position) {
           currentChar = character;
@@ -236,35 +260,32 @@ export default class GameController {
       });
       this.gamePlay.showCellTooltip(message, index);
     }
-    if (document.querySelector('.selected-yellow') != null) {
-      const array = Array.prototype.slice.call(this.cells);
-      const numberSelected = array.indexOf(document.querySelector('.selected'));
-      if (this.cells[index].firstChild && (this.cells[index].firstChild.classList.contains('swordsman') || this.cells[index].firstChild.classList.contains('bowman') || this.cells[index].firstChild.classList.contains('magician'))) {
-        this.gamePlay.setCursor(cursors.pointer);
-      } else if (this.cells[index].firstChild === null) {
-        if (document.querySelector('.selected-yellow').firstChild.classList.contains('swordsman')) {
+    if (this.objectState.selectCell) {
+      const numberSelected = this.objectState.selectCell;
+      if (this.objectState.cellsPlayer.includes(index) === false && this.objectState.cellsNpc.includes(index) === false) {
+        if (this.objectState.selectType === 'swordsman') {
           this.validCells = validFourCell(numberSelected);
-        } if (document.querySelector('.selected-yellow').firstChild.classList.contains('bowman')) {
+        } if (this.objectState.selectType === 'bowman') {
           this.validCells = validTwoCell(numberSelected);
-        } if (document.querySelector('.selected-yellow').firstChild.classList.contains('magician')) {
+        } if (this.objectState.selectType === 'magician') {
           this.validCells = validOneCell(numberSelected);
-        } if (this.validCells.includes(index)) {
+        } if (this.validCells.validCells.includes(index)) {
           this.cells[index].classList.add('selected', 'selected-green');
           this.gamePlay.setCursor(cursors.pointer);
-        }
-      } else if (this.cells[index].firstChild && (this.cells[index].firstChild.classList.contains('daemon') || this.cells[index].firstChild.classList.contains('undead') || this.cells[index].firstChild.classList.contains('vampire'))) {
-        if (document.querySelector('.selected-yellow').firstChild.classList.contains('swordsman')) {
+        } else if (this.validCells.redCells.includes(index)) { this.cells[index].classList.add('selected', 'selected-red'); }
+      } else if (this.objectState.cellsNpc.includes(index)) {
+        if (this.objectState.selectType === 'swordsman') {
           this.validCells = validOneCell(numberSelected);
-        } if (document.querySelector('.selected-yellow').firstChild.classList.contains('bowman')) {
+        } if (this.objectState.selectType === 'bowman') {
           this.validCells = validTwoCell(numberSelected);
-        } if (document.querySelector('.selected-yellow').firstChild.classList.contains('magician')) {
+        } if (this.objectState.selectType === 'magician') {
           this.validCells = validFourCell(numberSelected);
-        } if (this.validCells.includes(index)) {
+        } if (this.validCells.validCells.includes(index)) {
           this.cells[index].classList.add('selected', 'selected-red');
           this.gamePlay.setCursor(cursors.crosshair);
         } else { this.gamePlay.setCursor(cursors.notallowed); }
       }
-    } else if (this.cells[index].firstChild && (this.cells[index].firstChild.classList.contains('swordsman') || this.cells[index].firstChild.classList.contains('bowman') || this.cells[index].firstChild.classList.contains('magician'))) {
+    } if (this.objectState.cellsPlayer.includes(index)) {
       this.gamePlay.setCursor(cursors.pointer);
     }
   }
@@ -273,12 +294,12 @@ export default class GameController {
     // TODO: react to mouse leave
     this.validCells = [];
     this.gamePlay.hideCellTooltip(index);
-    if (this.cells[index].firstChild === null) {
-      this.cells[index].classList.remove('selected', 'selected-green');
-    } if (this.cells[index].firstChild && (this.cells[index].firstChild.classList.contains('daemon') || this.cells[index].firstChild.classList.contains('undead') || this.cells[index].firstChild.classList.contains('vampire'))) {
+    if (this.objectState.cellsPlayer.includes(index) === false && this.objectState.cellsNpc.includes(index) === false) {
+      this.cells[index].classList.remove('selected', 'selected-green', 'selected-red');
+    } if (this.objectState.cellsNpc.includes(index)) {
       this.cells[index].classList.remove('selected', 'selected-red');
-      this.gamePlay.setCursor(cursors.auto);
     }
+    this.gamePlay.setCursor(cursors.auto);
   }
 
   computerMove() {
@@ -298,7 +319,7 @@ export default class GameController {
     } if (character.character.type === 'undead') {
       this.validCells = validOneCell(character.position);
     }
-    this.validCells.forEach((index) => {
+    this.validCells.validCells.forEach((index) => {
       if (this.cells[index].firstChild != null && (this.cells[index].firstChild.classList.contains('swordsman') || this.cells[index].firstChild.classList.contains('bowman') || this.cells[index].firstChild.classList.contains('magician'))) {
         validCellsAttack.push(index);
       }
@@ -336,12 +357,12 @@ export default class GameController {
         this.validCells = validTwoCell(character.position);
       } if (character.character.type === 'undead') {
         this.validCells = validFourCell(character.position);
-      } this.validCells.forEach((n) => {
+      } this.validCells.validCells.forEach((n) => {
         if (this.cells[n].firstChild != null) {
-          this.validCells.splice(this.validCells.indexOf(n), 1);
+          this.validCells.validCells.splice(this.validCells.validCells.indexOf(n), 1);
         }
       });
-      const cellMove = this.validCells[Math.floor(Math.random() * this.validCells.length)];
+      const cellMove = this.validCells.validCells[Math.floor(Math.random() * this.validCells.validCells.length)];
       this.teamJoint.forEach((ch) => {
         if (character === ch) {
           ch.position = cellMove;
